@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+
+/**
+ * Chat server
+ */
+
+/**
+ * Module dependencies
+ */
+
+var net     = require('net');
+var program = require('commander');
+
+
+/**
+ * Parse CLI arguments
+ *
+ * @example: 
+ *  start-chat-server -h localhost -p 5555
+ */
+
+program
+  .version('0.0.0')
+  .option('-p, --port <n>', 'Server port', parseInt, 5555)
+  .parse(process.argv);
+
+/**
+ * Define server logic
+ */
+
+var clients = {};
+
+var listener = function(client) {
+  
+  console.log('client connected');
+
+  // clients.push(client);
+  // console.log('number of clients online: '+clients.length);
+  
+  client.on('data', function(chunk) {
+    if (chunk.toString().trim().length) {
+      console.log('client sent:', chunk.toString());
+      clients.forEach(function(c) {
+        c.write(chunk);
+      });
+    }
+  });
+  
+  client.on('end', function() {
+    // console.log('client disconnected');
+    // clients.splice(clients.indexOf(client), 1);
+  });
+  
+  // client.write('Welcome to server!\n');
+}
+
+/**
+ * Create TCP server
+ */
+
+var server = net.createServer(listener);
+
+/**
+ * Start TCP server
+ */
+
+server.listen(program.port, function() {
+  console.log('Chat server is listening on port', program.port);
+});

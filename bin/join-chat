@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+/**
+ * Chat client
+ */
+
+/**
+ * Module dependencies
+ */
+
+var net       = require('net');
+var program   = require('commander');
+var sock      = require('../lib/protocol/client.js')
+
+process.stdin.setEncoding('utf8');
+
+/**
+ * Parse CLI arguments
+ *
+ * @example: 
+ *  join-chat -h localhost -p 5555
+ */
+
+program
+  .version('0.0.0')
+  .option('-n, --name [value]')
+  .option('-p, --port <n>', 'Server port', parseInt, 5555)
+  .option('-h, --host [value]', 'Server host', 'localhost')
+  .parse(process.argv);
+
+if (!program.name){
+  throw new Error('Client Requires Nickname to Connect to Chat');
+}
+
+/**
+ * Define client logic
+ */
+
+var client = net.connect({
+  port: program.port, 
+  host: program.host
+}, function() {
+  console.log(sock(client));
+});
+
+process.stdin.on('readable', function(){
+  var chunk = process.stdin.read();
+  if(chunk !== null){
+    process.stdout.write(name+' said: '+chunk);
+    client.write(chunk);
+  }
+});
+
+process.stdin.on('end', function(){
+  process.stdout.write('end');
+});
+
+client.on('data', function(data){
+  console.log(data.toString());
+});
+
+client.on('end', function(){
+  console.log('client disconnected');
+});
