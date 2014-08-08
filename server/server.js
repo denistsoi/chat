@@ -25,6 +25,8 @@ function Client(socket) {
         break;
       case 'command':
         this.emit('command', message.data);
+      case 'end':
+        this.emit('end');
         break;
     }
   }.bind(this));
@@ -43,7 +45,6 @@ $.extend(Client.prototype, $.events);
 /**
  * Server
  */
-
 var net = require('net');
 var fs = require('fs');
 
@@ -57,10 +58,12 @@ var server = net.createServer(function(socket) {
   var client = new Client(socket);
 
   client.on('greeting', function() {
+    // should wrap this
     var d = Date().toString();
     var logEntry = client.id+" "+client.name+' sent'+' greeting' + ' at '+ d;    
     console.log(logEntry);
     logger.write(logEntry+'\n');
+    //
 
     clients[client.id] = client;
     
@@ -76,10 +79,13 @@ var server = net.createServer(function(socket) {
   });
 
   client.on('room', function(name) {
+
+    // should wrap this
     var d = Date().toString();
     var logEntry = client.id+" "+client.name+' joined '+name+' at '+ d;
     console.log(logEntry);
     logger.write(logEntry+'\n');
+    //
 
     client.room = rooms[name] = rooms[name] || { name: name };
     var roommates = $.filter(clients, function(c) {
@@ -106,10 +112,12 @@ var server = net.createServer(function(socket) {
       });
     });
 
+    // should wrap this
     var d = Date().toString();
     var logEntry = client.id+" "+client.name+' said'+text+' at '+ d;
     console.log(logEntry);
     logger.write(logEntry+'\n');
+    //
   });
 
   client.on('command', function(text){
@@ -121,6 +129,7 @@ var server = net.createServer(function(socket) {
   client.on('end', function() {
     if (!client.room) return;
     
+    console.log('end');
     $.filter(clients, function(c) {
       return c.room === client.room;
     }).forEach(function(c) {
@@ -130,10 +139,12 @@ var server = net.createServer(function(socket) {
       });
     });
 
+    // should wrap this
     var d = Date().toString();
     var logEntry = client.id+" "+client.name+' left'+name+' at '+ d;
     console.log(logEntry);
     logger.write(logEntry+'\n');
+    //
 
     delete clients[client.id];
   });
