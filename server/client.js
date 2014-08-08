@@ -81,7 +81,8 @@ process.stdin.on('end', function(){
 process.stdin.on('readable', function(){
   var chunk = process.stdin.read();
   if(chunk !== null){
-    send({type: 'message', data: chunk});
+    // send({type: 'message', data: chunk});
+    send('message', chunk);
   }
 });
 
