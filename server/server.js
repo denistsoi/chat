@@ -1,5 +1,5 @@
 /**
- * Client
+ * Handle Client's JSON Stream
  */
 
 var JSONStream = require('json-stream');
@@ -45,6 +45,9 @@ $.extend(Client.prototype, $.events);
  */
 
 var net = require('net');
+var fs = require('fs');
+
+var logger = fs.createWriteStream("temp.txt", {flags: 'a'});
 
 var clients = {};
 var rooms = {};
@@ -54,8 +57,13 @@ var server = net.createServer(function(socket) {
   var client = new Client(socket);
 
   client.on('greeting', function() {
-    console.log(client.id, client.name, 'sent', 'greeting');
+    var d = Date().toString();
+    var logEntry = client.id+" "+client.name+' sent'+' greeting' + ' at '+ d;    
+    console.log(logEntry);
+    logger.write(logEntry+'\n');
+
     clients[client.id] = client;
+    
     client.send({ 
       type: 'greeting',
       rooms: $.map(rooms, function(room) {
@@ -63,10 +71,16 @@ var server = net.createServer(function(socket) {
       }),
       id: client.id
     });
+
+
   });
 
   client.on('room', function(name) {
-    console.log(client.id, client.name, 'sent', 'room', name);
+    var d = Date().toString();
+    var logEntry = client.id+" "+client.name+' joined '+name+' at '+ d;
+    console.log(logEntry);
+    logger.write(logEntry+'\n');
+
     client.room = rooms[name] = rooms[name] || { name: name };
     var roommates = $.filter(clients, function(c) {
       return c.room === client.room;
@@ -91,6 +105,11 @@ var server = net.createServer(function(socket) {
         } 
       });
     });
+
+    var d = Date().toString();
+    var logEntry = client.id+" "+client.name+' said'+text+' at '+ d;
+    console.log(logEntry);
+    logger.write(logEntry+'\n');
   });
 
   client.on('command', function(text){
@@ -111,12 +130,17 @@ var server = net.createServer(function(socket) {
       });
     });
 
+    var d = Date().toString();
+    var logEntry = client.id+" "+client.name+' left'+name+' at '+ d;
+    console.log(logEntry);
+    logger.write(logEntry+'\n');
+
     delete clients[client.id];
   });
 });
 
 server.on('error', function(err) {
-  console.log('ERROR', err);
+  console.log('\x1b[36m%s\x1b[0m', 'ERROR', err);
 });
 
 server.listen(5555, function(){
